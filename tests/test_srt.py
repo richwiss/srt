@@ -3,8 +3,9 @@
 from __future__ import unicode_literals
 from datetime import timedelta
 import functools
+import os
 
-from hypothesis import given
+from hypothesis import given, settings, HealthCheck
 import hypothesis.strategies as st
 from nose.tools import (eq_ as eq, assert_not_equal as neq, assert_raises,
                         assert_false, assert_true, assert_in)
@@ -24,6 +25,15 @@ CONTENTLESS_SUB = functools.partial(
     start=timedelta(seconds=1), end=timedelta(seconds=2),
 )
 CONTENT_TEXT = st.text(min_size=1)
+
+# Some runners, especially the Mac travis runners, can get really, really slow.
+# We shouldn't fail builds for this.
+settings.register_profile(
+    'ci',
+    settings(suppress_health_check=[HealthCheck.too_slow])
+)
+if os.environ.get('CI').lower() == 'true':
+    settings.load_profile('ci')
 
 
 def is_strictly_legal_content(content):
